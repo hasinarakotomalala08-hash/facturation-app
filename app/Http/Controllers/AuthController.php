@@ -48,6 +48,7 @@ class AuthController extends Controller
             'password' => ['required', 'confirmed', Password::min(8)],
         ], [
             'password.confirmed' => 'La confirmation du mot de passe ne correspond pas.',
+            'email.unique' => 'Cette adresse e-mail est déjà utilisée.',
         ]);
 
         $user = User::create([

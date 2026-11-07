@@ -55,6 +55,25 @@ class AuthFeatureTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_registration_shows_a_french_error_when_email_is_already_used(): void
+    {
+        User::factory()->create(['email' => 'tanjona@example.test']);
+
+        $response = $this->from(route('register'))->post(route('register.store'), [
+            'name' => 'Tanjona Razakaria',
+            'email' => 'tanjona@example.test',
+            'password' => 'securite123',
+            'password_confirmation' => 'securite123',
+        ]);
+
+        $response->assertRedirect(route('register'))
+            ->assertSessionHasErrors([
+                'email' => 'Cette adresse e-mail est déjà utilisée.',
+            ]);
+        $this->assertDatabaseCount('users', 1);
+        $this->assertGuest();
+    }
+
     public function test_a_user_can_sign_in_with_valid_credentials(): void
     {
         $user = User::factory()->create([
