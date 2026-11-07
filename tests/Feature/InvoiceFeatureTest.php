@@ -39,6 +39,10 @@ class InvoiceFeatureTest extends TestCase
 
         $pdfHtml = view('invoices.pdf', compact('invoice'))->render();
         $this->assertStringContainsString('display: table;', $pdfHtml);
+        $this->assertStringContainsString('@page { margin: 0; }', $pdfHtml);
+        $this->assertStringContainsString('<body class="pdf-document">', $pdfHtml);
+        $this->assertStringContainsString('body.pdf-document .invoice-paper', $pdfHtml);
+        $this->assertStringContainsString('padding: 49px 50px 38px;', $pdfHtml);
         $this->assertStringContainsString('Services réalisés au cours du mois', $pdfHtml);
 
         $response = $this->actingAs($user)->get(route('invoices.pdf', $invoice));
