@@ -12,12 +12,22 @@ class AuthFeatureTest extends TestCase
 
     public function test_a_visitor_can_create_an_account_and_sign_out(): void
     {
-        $this->post(route('register.store'), [
+        $this->freezeTime();
+
+        $response = $this->post(route('register.store'), [
             'name' => 'Tanjona Razakaria',
             'email' => 'tanjona@example.test',
             'password' => 'securite123',
             'password_confirmation' => 'securite123',
-        ])->assertRedirect(route('invoices.index'));
+        ]);
+
+        $response->assertRedirect(route('invoices.index'));
+
+        $sessionCookie = $response->getCookie(config('session.cookie'), false);
+        $this->assertNotNull($sessionCookie);
+        $this->assertSame(now()->addHours(2)->getTimestamp(), $sessionCookie->getExpiresTime());
+        $this->assertTrue($sessionCookie->isHttpOnly());
+        $this->assertSame('lax', $sessionCookie->getSameSite());
 
         $this->assertAuthenticated();
         $this->assertDatabaseHas('users', ['email' => 'tanjona@example.test']);
@@ -25,6 +35,23 @@ class AuthFeatureTest extends TestCase
         $this->post(route('logout'))
             ->assertRedirect(route('login'));
 
+        $this->assertGuest();
+    }
+
+    public function test_registration_shows_a_french_error_when_password_confirmation_does_not_match(): void
+    {
+        $response = $this->from(route('register'))->post(route('register.store'), [
+            'name' => 'Tanjona Razakaria',
+            'email' => 'tanjona@example.test',
+            'password' => 'securite123',
+            'password_confirmation' => 'different123',
+        ]);
+
+        $response->assertRedirect(route('register'))
+            ->assertSessionHasErrors([
+                'password' => 'La confirmation du mot de passe ne correspond pas.',
+            ]);
+        $this->assertDatabaseMissing('users', ['email' => 'tanjona@example.test']);
         $this->assertGuest();
     }
 
