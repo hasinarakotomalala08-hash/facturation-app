@@ -24,6 +24,13 @@
                 <a class="{{ request()->routeIs('invoices.create') ? 'active' : '' }}" href="{{ route('invoices.create') }}">
                     <span class="nav-icon nav-plus">＋</span> Nouvelle facture
                 </a>
+                <a class="{{ request()->routeIs('account.*') ? 'active' : '' }}" href="{{ route('account.edit') }}">
+                    <svg class="nav-icon account-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <circle cx="12" cy="8" r="3.5"/>
+                        <path d="M5 20c.7-3.5 3.2-5.5 7-5.5s6.3 2 7 5.5"/>
+                    </svg>
+                    Mon compte
+                </a>
             </nav>
             <div class="sidebar-bottom">
                 <div class="secure-note"><span class="secure-dot"></span> Vos documents restent privés</div>

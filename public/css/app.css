@@ -35,6 +35,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .side-nav a:hover { background: rgba(255,255,255,.07); color: #fff; }
 .side-nav a.active { background: rgba(255,255,255,.11); color: #fff; font-weight: 600; }
 .nav-icon { align-items: center; color: #a9c6d6; display: inline-flex; font-size: 17px; height: 19px; justify-content: center; width: 19px; }
+.account-nav-icon { flex: 0 0 19px; }
 .nav-plus { font-size: 21px; }
 .sidebar-bottom { margin-top: auto; }
 .secure-note { align-items: center; border-bottom: 1px solid rgba(255,255,255,.12); color: #a9bac8; display: flex; font-size: 10px; gap: 8px; padding: 13px 5px 16px; }
@@ -72,6 +73,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .button-primary:hover { background: #244b6c; }
 .button-secondary { background: #fff; border-color: #dfe5ea; color: #435467; }
 .button-secondary:hover { background: #f7f9fa; border-color: #c8d2da; }
+.button-danger { background: #a53d35; color: #fff; }
+.button-danger:hover { background: #87332d; }
+.google-button { gap: 10px; margin-top: 10px; }
+.google-button-icon { flex: 0 0 18px; height: 18px; width: 18px; }
 .button-plus { font-size: 16px; font-weight: 400; line-height: 1; }
 .button-full { width: 100%; }
 
@@ -119,6 +124,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .empty-state p { color: #83909b; font-size: 10px; line-height: 1.65; margin: 7px 0 17px; max-width: 350px; }
 .privacy-note { align-items: center; color: #86939e; display: flex; font-size: 9px; gap: 7px; margin: 16px 2px 0; }
 .privacy-note span, .privacy-lock { color: #648aa1; font-size: 13px; }
+.account-settings { display: grid; gap: 18px; max-width: 760px; }
+.account-settings .form-section { margin: 0; }
+.account-settings .form-field { max-width: 460px; }
+.account-danger-zone { align-items: center; background: #fff; border: 1px solid #efd9d6; border-radius: 7px; display: flex; gap: 20px; justify-content: space-between; padding: 18px 21px; }
+.account-danger-zone h2 { color: #87332d; font: 700 12px 'Manrope', sans-serif; margin: 0; }
+.account-danger-zone p { color: var(--muted); font-size: 9px; line-height: 1.6; margin: 5px 0 0; }
+.account-danger-zone form { flex: 0 0 auto; }
 .pagination-wrap { border-top: 1px solid #edf0f3; padding: 12px 18px; }
 .pagination-wrap nav { align-items: center; display: flex; justify-content: space-between; }
 .pagination-wrap nav > div:first-child { color: #7b8994; font-size: 9px; }
@@ -248,7 +260,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     .sidebar-bottom { grid-column: 2; grid-row: 1; margin: 0; }
     .profile { gap: 7px; padding: 0; }
     .profile form { margin-left: 0; }
-    .side-nav { display: grid; gap: 5px; grid-column: 1 / -1; grid-row: 2; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 10px; }
+    .side-nav { display: grid; gap: 5px; grid-column: 1 / -1; grid-row: 2; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 10px; }
     .side-nav a { font-size: 10px; justify-content: center; min-height: 34px; padding: 0 7px; }
     .side-nav a.active { background: rgba(255,255,255,.12); }
     .nav-icon { font-size: 14px; }
@@ -278,6 +290,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     .detail-heading { align-items: flex-start; flex-direction: column; }
     .document-wrap { margin-right: -16px; }
     .detail-footer-actions { align-items: flex-start; flex-direction: column; gap: 8px; }
+    .account-danger-zone { align-items: flex-start; flex-direction: column; gap: 14px; padding: 15px; }
+    .account-danger-zone form, .account-danger-zone .button { width: 100%; }
     .pagination-wrap nav { align-items: flex-start; flex-direction: column; gap: 10px; }
 }
 
