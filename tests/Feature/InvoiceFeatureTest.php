@@ -106,6 +106,13 @@ class InvoiceFeatureTest extends TestCase
             ->assertRedirect(route('invoices.show', $invoice))
             ->assertSessionHas('status', 'La facture a été placée dans la file d’envoi.');
 
+        $message = 'La facture a été placée dans la file d’envoi.';
+        $response = $this->actingAs($user)
+            ->get(route('invoices.show', $invoice))
+            ->assertOk()
+            ->assertSeeText($message);
+        $this->assertSame(1, substr_count($response->getContent(), $message));
+
         $invoice->refresh();
         $this->assertSame('sent', $invoice->status);
         $this->assertNotNull($invoice->sent_at);
@@ -124,6 +131,24 @@ class InvoiceFeatureTest extends TestCase
                 && $attachments[0]->as === "facture-{$invoice->invoice_number}.pdf"
                 && $attachments[0]->mime === 'application/pdf';
         });
+    }
+
+    public function test_invoice_list_displays_email_sent_and_draft_statuses(): void
+    {
+        $user = User::factory()->create();
+        $user->invoices()->create(array_merge($this->invoiceAttributes(), [
+            'status' => 'sent',
+            'sent_at' => now(),
+        ]));
+        $user->invoices()->create(array_merge($this->invoiceAttributes(), [
+            'invoice_number' => 'FAC-202611-FGHIJ',
+        ]));
+
+        $this->actingAs($user)
+            ->get(route('invoices.index'))
+            ->assertOk()
+            ->assertSeeText('Envoyée par e-mail')
+            ->assertSeeText('Brouillon');
     }
 
     public function test_invoice_email_subject_uses_previous_year_in_january(): void

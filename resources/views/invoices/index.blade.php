@@ -57,7 +57,7 @@
         @else
             <div class="table-wrap">
                 <table class="invoice-table">
-                    <thead><tr><th>NUMÉRO</th><th>CLIENT</th><th>PÉRIODE</th><th>DATE D'ÉMISSION</th><th class="align-right">MONTANT TTC</th><th></th></tr></thead>
+                    <thead><tr><th>NUMÉRO</th><th>CLIENT</th><th>PÉRIODE</th><th>DATE D'ÉMISSION</th><th>STATUT</th><th class="align-right">MONTANT TTC</th><th></th></tr></thead>
                     <tbody>
                     @foreach ($invoices as $invoice)
                         <tr>
@@ -65,6 +65,7 @@
                             <td><span class="client-name">{{ $invoice->client_name }}</span>@if ($invoice->client_contact)<small class="table-subtext">{{ $invoice->client_contact }}</small>@endif</td>
                             <td class="muted-cell">{{ $invoice->period }}</td>
                             <td class="muted-cell">{{ $invoice->issue_date->format('d/m/Y') }}</td>
+                            <td><span class="invoice-status {{ $invoice->status === 'sent' ? 'invoice-status-sent' : 'invoice-status-draft' }}">{{ $invoice->status === 'sent' ? 'Envoyée par e-mail' : 'Brouillon' }}</span></td>
                             <td class="align-right amount-cell">{{ number_format($invoice->total, 0, ',', ' ') }} <small>Ar</small></td>
                             <td><a class="row-arrow" href="{{ route('invoices.show', $invoice) }}" aria-label="Ouvrir {{ $invoice->invoice_number }}">↗</a></td>
                         </tr>

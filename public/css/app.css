@@ -112,6 +112,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .invoice-table .invoice-number:hover { text-decoration: underline; }
 .client-name { color: #33475a; font-weight: 600; }
 .table-subtext { color: #909ba4; display: block; font-size: 9px; margin-top: 3px; }
+.invoice-status { border-radius: 999px; display: inline-block; font-size: 8px; font-weight: 700; padding: 5px 8px; white-space: nowrap; }
+.invoice-status-sent { background: #edf7f1; color: #347551; }
+.invoice-status-draft { background: #f2f4f6; color: #73808a; }
 .muted-cell { color: #778692 !important; }
 .align-right { text-align: right !important; }
 .amount-cell { color: #25394c !important; font-weight: 700; white-space: nowrap; }
@@ -232,7 +235,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     .invoice-table td:nth-child(2)::before { content: 'CLIENT'; }
     .invoice-table td:nth-child(3)::before { content: 'PÉRIODE'; }
     .invoice-table td:nth-child(4)::before { content: 'DATE'; }
-    .invoice-table td:nth-child(5)::before { content: 'MONTANT TTC'; }
+    .invoice-table td:nth-child(5)::before { content: 'STATUT'; }
+    .invoice-table td:nth-child(6)::before { content: 'MONTANT TTC'; }
     .invoice-table td:last-child { display: block; padding: 0; position: absolute; right: 12px; top: 10px; }
     .invoice-table td:last-child::before { display: none; }
     .invoice-form { grid-template-columns: minmax(0, 1fr); }

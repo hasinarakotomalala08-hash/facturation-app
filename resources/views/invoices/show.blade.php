@@ -25,9 +25,6 @@
         </div>
     </div>
 
-    @if (session('status'))
-        <div class="alert alert-success" role="status">{{ session('status') }}</div>
-    @endif
     @error('client_email')
         <div class="alert alert-error" role="alert">{{ $message }}</div>
     @enderror
