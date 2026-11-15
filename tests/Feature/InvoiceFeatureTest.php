@@ -162,15 +162,17 @@ class InvoiceFeatureTest extends TestCase
             );
     }
 
-    public function test_invoice_email_subject_uses_previous_year_in_january(): void
+    public function test_invoice_email_subject_uses_the_billed_period(): void
     {
-        $this->travelTo('2026-01-15 10:00:00');
         $user = User::factory()->create();
-        $invoice = $user->invoices()->create($this->invoiceAttributes());
+        $period = 'Du 1er au 30 septembre 2026';
+        $invoice = $user->invoices()->create(array_merge($this->invoiceAttributes(), [
+            'period' => $period,
+        ]));
 
         $mail = new SendInvoiceMail($invoice);
 
-        $this->assertSame('[facture] Décembre - 2025', $mail->envelope()->subject);
+        $this->assertSame('[facture] Septembre - 2026', $mail->envelope()->subject);
     }
 
     public function test_invoice_send_requires_a_client_email(): void

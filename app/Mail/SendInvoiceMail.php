@@ -21,16 +21,16 @@ class SendInvoiceMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        $previousMonth = $this->invoice->created_at
-            ->copy()
-            ->startOfMonth()
-            ->subMonth()
-            ->locale('fr')
-            ->translatedFormat('F - Y');
+        $period = $this->invoice->period;
+
+        if (preg_match('/\b(janvier|f[eé]vrier|mars|avril|mai|juin|juillet|ao[uû]t|septembre|octobre|novembre|d[eé]cembre)\b(?:\s*[-–]\s*|\s+)(\d{4})\b/iu', $period, $matches) === 1) {
+            $month = mb_convert_case($matches[1], MB_CASE_TITLE, 'UTF-8');
+            $period = $month.' - '.$matches[2];
+        }
 
         return new Envelope(
             from: new Address($this->invoice->provider_email),
-            subject: '[facture] '.ucfirst($previousMonth),
+            subject: '[facture] '.$period,
         );
     }
 
