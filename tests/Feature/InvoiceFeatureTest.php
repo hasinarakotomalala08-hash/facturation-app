@@ -151,6 +151,17 @@ class InvoiceFeatureTest extends TestCase
             ->assertSeeText('Brouillon');
     }
 
+    public function test_invoice_layout_versions_the_stylesheet_url(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->get(route('invoices.index'))
+            ->assertOk()
+            ->assertSee(
+                'href="'.asset('css/app.css').'?v='.filemtime(public_path('css/app.css')).'"',
+                false,
+            );
+    }
+
     public function test_invoice_email_subject_uses_previous_year_in_january(): void
     {
         $this->travelTo('2026-01-15 10:00:00');
