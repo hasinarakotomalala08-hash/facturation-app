@@ -2,9 +2,10 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\InvoiceController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => auth()->check()
+Route::get('/', fn () => Auth::check()
     ? redirect()->route('invoices.index')
     : redirect()->route('login'))->name('home');
 
@@ -25,4 +26,5 @@ Route::middleware('auth')->group(function () {
     Route::delete('/account', [AuthController::class, 'destroyAccount'])->name('account.destroy');
     Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
     Route::resource('invoices', InvoiceController::class);
+    Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'send'])->name('invoices.send');
 });

@@ -18,8 +18,22 @@
         <div class="heading-actions">
             <a class="button button-secondary" href="{{ route('invoices.edit', $invoice) }}">✎ <span>Modifier</span></a>
             <a class="button button-primary" href="{{ route('invoices.pdf', $invoice) }}"><span>↓</span> Télécharger le PDF</a>
+            <form method="POST" action="{{ route('invoices.send', $invoice) }}">
+                @csrf
+                <button class="button button-secondary" type="submit">Envoyer par e-mail</button>
+            </form>
         </div>
     </div>
+
+    @if (session('status'))
+        <div class="alert alert-success" role="status">{{ session('status') }}</div>
+    @endif
+    @error('client_email')
+        <div class="alert alert-error" role="alert">{{ $message }}</div>
+    @enderror
+    @error('provider_email')
+        <div class="alert alert-error" role="alert">{{ $message }}</div>
+    @enderror
 
     <div class="document-wrap">
         @include('invoices._document', ['invoice' => $invoice])

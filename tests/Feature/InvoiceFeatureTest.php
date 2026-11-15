@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Mail\SendInvoiceMail;
 use App\Models\Invoice;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class InvoiceFeatureTest extends TestCase
@@ -16,11 +18,14 @@ class InvoiceFeatureTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->post(route('invoices.store'), $this->invoiceData())
+            ->post(route('invoices.store'), $this->invoiceData([
+                'client_email' => 'client@example.test',
+            ]))
             ->assertRedirect();
 
         $invoice = Invoice::with('items')->firstOrFail();
 
+        $this->assertSame('client@example.test', $invoice->client_email);
         $this->assertSame(1_010_400, $invoice->total);
         $this->assertSame(21.0, $invoice->billed_days);
         $this->assertDatabaseHas('invoice_items', [
@@ -51,6 +56,21 @@ class InvoiceFeatureTest extends TestCase
         $this->assertStringStartsWith('%PDF-', $response->getContent());
     }
 
+    public function test_invoice_creation_rejects_an_invalid_client_email(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->from(route('invoices.create'))
+            ->post(route('invoices.store'), $this->invoiceData([
+                'client_email' => 'not-an-email',
+            ]))
+            ->assertRedirect(route('invoices.create'))
+            ->assertSessionHasErrors('client_email');
+
+        $this->assertDatabaseCount('invoices', 0);
+    }
+
     public function test_invoices_are_private_to_their_owner(): void
     {
         $owner = User::factory()->create();
@@ -64,6 +84,120 @@ class InvoiceFeatureTest extends TestCase
         $this->actingAs($otherUser)
             ->get(route('invoices.pdf', $invoice))
             ->assertNotFound();
+    }
+
+    public function test_an_invoice_can_be_queued_to_its_client_with_a_pdf_attachment(): void
+    {
+        $this->travelTo('2026-11-15 10:00:00');
+        $user = User::factory()->create();
+        $invoice = $user->invoices()->create(array_merge($this->invoiceAttributes(), [
+            'client_email' => 'client@example.test',
+        ]));
+        $invoice->items()->create([
+            'description' => 'Prestation de conseil',
+            'quantity' => 1,
+            'unit' => 'forfait',
+            'amount' => 100_000,
+        ]);
+        Mail::fake();
+
+        $this->actingAs($user)
+            ->post(route('invoices.send', $invoice))
+            ->assertRedirect(route('invoices.show', $invoice))
+            ->assertSessionHas('status', 'La facture a été placée dans la file d’envoi.');
+
+        $invoice->refresh();
+        $this->assertSame('sent', $invoice->status);
+        $this->assertNotNull($invoice->sent_at);
+
+        Mail::assertQueued(SendInvoiceMail::class, function (SendInvoiceMail $mail) use ($invoice): bool {
+            $renderedBody = $mail->render();
+            $attachments = $mail->attachments();
+
+            return $mail->hasTo('client@example.test')
+                && $mail->hasFrom('prestataire@example.test')
+                && $mail->from[0]['name'] === null
+                && $mail->invoice->id === $invoice->id
+                && $mail->hasSubject('[facture] Octobre - 2026')
+                && $renderedBody === ''
+                && count($attachments) === 1
+                && $attachments[0]->as === "facture-{$invoice->invoice_number}.pdf"
+                && $attachments[0]->mime === 'application/pdf';
+        });
+    }
+
+    public function test_invoice_email_subject_uses_previous_year_in_january(): void
+    {
+        $this->travelTo('2026-01-15 10:00:00');
+        $user = User::factory()->create();
+        $invoice = $user->invoices()->create($this->invoiceAttributes());
+
+        $mail = new SendInvoiceMail($invoice);
+
+        $this->assertSame('[facture] Décembre - 2025', $mail->envelope()->subject);
+    }
+
+    public function test_invoice_send_requires_a_client_email(): void
+    {
+        $user = User::factory()->create();
+        $invoice = $user->invoices()->create($this->invoiceAttributes());
+        Mail::fake();
+
+        $this->actingAs($user)
+            ->from(route('invoices.show', $invoice))
+            ->post(route('invoices.send', $invoice))
+            ->assertRedirect(route('invoices.show', $invoice))
+            ->assertSessionHasErrors([
+                'client_email' => "Ajoutez l'adresse e-mail du client avant d'envoyer la facture.",
+            ]);
+
+        $this->assertDatabaseHas('invoices', [
+            'id' => $invoice->id,
+            'status' => 'draft',
+            'sent_at' => null,
+        ]);
+        Mail::assertNothingQueued();
+    }
+
+    public function test_invoice_send_requires_a_provider_email_address(): void
+    {
+        $user = User::factory()->create();
+        $invoice = $user->invoices()->create(array_merge($this->invoiceAttributes(), [
+            'client_email' => 'client@example.test',
+            'provider_email' => null,
+        ]));
+        Mail::fake();
+
+        $this->actingAs($user)
+            ->from(route('invoices.show', $invoice))
+            ->post(route('invoices.send', $invoice))
+            ->assertRedirect(route('invoices.show', $invoice))
+            ->assertSessionHasErrors([
+                'provider_email' => "Ajoutez l'adresse e-mail du prestataire avant d'envoyer la facture.",
+            ]);
+
+        $this->assertDatabaseHas('invoices', [
+            'id' => $invoice->id,
+            'status' => 'draft',
+            'sent_at' => null,
+        ]);
+        Mail::assertNothingQueued();
+    }
+
+    public function test_a_user_cannot_send_another_users_invoice(): void
+    {
+        $owner = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $invoice = $owner->invoices()->create(array_merge($this->invoiceAttributes(), [
+            'client_email' => 'client@example.test',
+        ]));
+        Mail::fake();
+
+        $this->actingAs($otherUser)
+            ->post(route('invoices.send', $invoice))
+            ->assertNotFound();
+
+        Mail::assertNothingQueued();
     }
 
     public function test_an_invoice_can_be_updated_with_multiple_items(): void
@@ -100,7 +234,10 @@ class InvoiceFeatureTest extends TestCase
 
     public function test_invoice_pages_require_an_account(): void
     {
+        $invoice = User::factory()->create()->invoices()->create($this->invoiceAttributes());
+
         $this->get(route('invoices.index'))->assertRedirect(route('login'));
+        $this->post(route('invoices.send', $invoice))->assertRedirect(route('login'));
     }
 
     public function test_an_authenticated_user_can_open_the_invoice_form(): void

@@ -2,17 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\SendInvoiceMail;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Http\Response;
 use Illuminate\View\View;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
 {
@@ -51,7 +54,7 @@ class InvoiceController extends Controller
             'invoice_number' => 'FAC-'.now()->format('Ym').'-'.Str::upper(Str::random(5)),
             'issue_date' => today(),
             'period' => 'Prestation '.now()->locale('fr')->translatedFormat('F Y'),
-            'provider_name' => auth()->user()->name,
+            'provider_name' => Auth::user()->name,
             'provider_title' => '',
             'provider_address' => '',
             'provider_tax_id' => 'en cours',
@@ -137,6 +140,33 @@ class InvoiceController extends Controller
             ->download($filename);
     }
 
+    public function send(Request $request, Invoice $invoice): RedirectResponse
+    {
+        $invoice = $this->findOwnedInvoice($request, $invoice->id);
+
+        if (! $invoice->client_email) {
+            return back()->withErrors([
+                'client_email' => "Ajoutez l'adresse e-mail du client avant d'envoyer la facture.",
+            ]);
+        }
+
+        if (! $invoice->provider_email) {
+            return back()->withErrors([
+                'provider_email' => "Ajoutez l'adresse e-mail du prestataire avant d'envoyer la facture.",
+            ]);
+        }
+
+        Mail::to($invoice->client_email)->queue(new SendInvoiceMail($invoice));
+        $invoice->update([
+            'status' => 'sent',
+            'sent_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('invoices.show', $invoice)
+            ->with('status', 'La facture a été placée dans la file d’envoi.');
+    }
+
     private function validatedInvoice(Request $request, ?Invoice $invoice = null): array
     {
         $numberRule = Rule::unique('invoices', 'invoice_number')
@@ -158,6 +188,7 @@ class InvoiceController extends Controller
             'provider_tax_id' => ['nullable', 'string', 'max:100'],
             'client_name' => ['required', 'string', 'max:150'],
             'client_contact' => ['nullable', 'string', 'max:150'],
+            'client_email' => ['nullable', 'email', 'max:150'],
             'client_address' => ['required', 'string', 'max:255'],
             'payment_method' => ['required', 'string', 'max:100'],
             'items' => ['required', 'array', 'min:1', 'max:30'],

@@ -48,6 +48,7 @@
                     <h3><span class="mini-dot client-dot"></span> Client</h3>
                     <div class="form-field"><label for="client_name">Nom / raison sociale <b>*</b></label><input id="client_name" name="client_name" value="{{ old('client_name', $invoice->client_name) }}" maxlength="150" required></div>
                     <div class="form-field"><label for="client_contact">Contact / responsable</label><input id="client_contact" name="client_contact" value="{{ old('client_contact', $invoice->client_contact) }}" maxlength="150"></div>
+                    <div class="form-field"><label for="client_email">E-mail du client</label><input id="client_email" name="client_email" type="email" value="{{ old('client_email', $invoice->client_email) }}" maxlength="150">@error('client_email')<small class="field-error">{{ $message }}</small>@enderror</div>
                     <div class="form-field"><label for="client_address">Adresse <b>*</b></label><input id="client_address" name="client_address" value="{{ old('client_address', $invoice->client_address) }}" maxlength="255" required></div>
                     <div class="form-field"><label for="payment_method">Mode de paiement <b>*</b></label>
                         <select id="payment_method" name="payment_method" required>

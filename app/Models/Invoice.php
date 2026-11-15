@@ -20,8 +20,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'provider_tax_id',
     'client_name',
     'client_contact',
+    'client_email',
     'client_address',
     'payment_method',
+    'status',
+    'sent_at',
 ])]
 class Invoice extends Model
 {
@@ -29,6 +32,7 @@ class Invoice extends Model
     {
         return [
             'issue_date' => 'date',
+            'sent_at' => 'datetime',
         ];
     }
 
